@@ -1,12 +1,13 @@
 package ru.mine.domain;
 
 import lombok.Data;
+import ru.mine.domain.enumeration.SystemRoles;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
 
-@Entity
 @Data
+@Entity
 @Table(name = "m_users")
 public class User {
 
@@ -31,4 +32,8 @@ public class User {
 
     @Column
     private Timestamp changed;
+
+    @Column
+    @Enumerated(EnumType.STRING)
+    private SystemRoles role = SystemRoles.REGULAR_USER;
 }
