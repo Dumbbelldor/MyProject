@@ -1,7 +1,6 @@
 package ru.mine.domain;
 
 import lombok.Data;
-import ru.mine.domain.enumeration.SystemRoles;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
