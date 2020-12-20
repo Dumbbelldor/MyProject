@@ -25,4 +25,7 @@ public class Driver {
 
     @Column(name = "driver_license_expiration_date")
     private Date licenseExpDate;
+
+    @Column(name = "is_admitted")
+    private boolean isAdmitted;
 }
