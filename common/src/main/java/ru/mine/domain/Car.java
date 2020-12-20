@@ -28,4 +28,7 @@ public class Car {
 
     @Column(name = "driver_id")
     private Integer driverId;
+
+    @Column(name = "is_available")
+    private boolean isAvailable;
 }

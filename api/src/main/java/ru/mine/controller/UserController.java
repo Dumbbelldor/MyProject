@@ -5,6 +5,7 @@ import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.mine.controller.assembler.UserModelAssembler;
 import ru.mine.domain.User;
 import ru.mine.repository.UserRepository;
 

@@ -5,25 +5,25 @@ import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.mine.controller.assembler.DriverModelAssembler;
-import ru.mine.domain.Driver;
-import ru.mine.repository.DriverRepository;
+import ru.mine.controller.assembler.MenuModelAssembler;
+import ru.mine.domain.Menu;
+import ru.mine.repository.MenuRepository;
 
 import javax.persistence.EntityNotFoundException;
 import java.util.List;
 
 @RestController
-@RequestMapping("/drivers")
-public class DriverController {
+@RequestMapping("/menu")
+public class MenuController {
 
-    private final DriverRepository repository;
+    private final MenuRepository repository;
 
-    private final DriverModelAssembler assembler;
+    private final MenuModelAssembler assembler;
 
-    private static final String MESSAGE = "Driver is not found by id: ";
+    private static final String MESSAGE = "Menu item is not found by id: ";
 
     @Autowired
-    public DriverController(DriverRepository repository, DriverModelAssembler assembler) {
+    public MenuController(MenuRepository repository, MenuModelAssembler assembler) {
         this.repository = repository;
         this.assembler = assembler;
     }
@@ -31,35 +31,35 @@ public class DriverController {
     /*All items*/
     @GetMapping
     @ResponseStatus(HttpStatus.FOUND)
-    public CollectionModel<EntityModel<Driver>> getAll() {
-        List<Driver> drivers = repository.findAll();
+    public CollectionModel<EntityModel<Menu>> getAll() {
+        List<Menu> menu = repository.findAll();
 
-        return assembler.toCollectionModel(drivers);
+        return assembler.toCollectionModel(menu);
     }
 
     /*Single item*/
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.FOUND)
-    public EntityModel<Driver> getSingle(@PathVariable Integer id) {
-        Driver driver = repository.findById(id)
+    public EntityModel<Menu> getSingle(@PathVariable Integer id) {
+        Menu menu = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(MESSAGE+id));
 
-        return assembler.toModel(driver);
+        return assembler.toModel(menu);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Driver create(@RequestBody Driver newDriver) {
-        return repository.save(newDriver);
+    public Menu create(@RequestBody Menu newMenu) {
+        return repository.save(newMenu);
     }
 
     @PatchMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public Driver flagAsFired(@PathVariable Integer id) {
+    public Menu flagAsUnavailable(@PathVariable Integer id) {
         return repository.findById(id)
-                .map(drv -> {
-                    drv.setAdmitted(false);
-                    return repository.save(drv);
+                .map(menu -> {
+                    menu.setAvailable(true);
+                    return repository.save(menu);
                 })
                 .orElseThrow( () -> new EntityNotFoundException(MESSAGE+id));
     }

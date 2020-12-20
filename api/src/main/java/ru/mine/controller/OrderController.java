@@ -5,25 +5,25 @@ import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.mine.controller.assembler.DriverModelAssembler;
-import ru.mine.domain.Driver;
-import ru.mine.repository.DriverRepository;
+import ru.mine.controller.assembler.OrderModelAssembler;
+import ru.mine.domain.Order;
+import ru.mine.repository.OrderRepository;
 
 import javax.persistence.EntityNotFoundException;
 import java.util.List;
 
 @RestController
-@RequestMapping("/drivers")
-public class DriverController {
+@RequestMapping("/orders")
+public class OrderController {
 
-    private final DriverRepository repository;
+    private final OrderRepository repository;
 
-    private final DriverModelAssembler assembler;
+    private final OrderModelAssembler assembler;
 
-    private static final String MESSAGE = "Driver is not found by id: ";
+    private static final String MESSAGE = "Order is not found by id: ";
 
     @Autowired
-    public DriverController(DriverRepository repository, DriverModelAssembler assembler) {
+    public OrderController(OrderRepository repository, OrderModelAssembler assembler) {
         this.repository = repository;
         this.assembler = assembler;
     }
@@ -31,35 +31,35 @@ public class DriverController {
     /*All items*/
     @GetMapping
     @ResponseStatus(HttpStatus.FOUND)
-    public CollectionModel<EntityModel<Driver>> getAll() {
-        List<Driver> drivers = repository.findAll();
+    public CollectionModel<EntityModel<Order>> getAll() {
+        List<Order> orders = repository.findAll();
 
-        return assembler.toCollectionModel(drivers);
+        return assembler.toCollectionModel(orders);
     }
 
     /*Single item*/
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.FOUND)
-    public EntityModel<Driver> getSingle(@PathVariable Integer id) {
-        Driver driver = repository.findById(id)
+    public EntityModel<Order> getSingle(@PathVariable Integer id) {
+        Order order = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(MESSAGE+id));
 
-        return assembler.toModel(driver);
+        return assembler.toModel(order);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Driver create(@RequestBody Driver newDriver) {
-        return repository.save(newDriver);
+    public Order create(@RequestBody Order newOrder) {
+        return repository.save(newOrder);
     }
 
     @PatchMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public Driver flagAsFired(@PathVariable Integer id) {
+    public Order flagAsDelivered(@PathVariable Integer id) {
         return repository.findById(id)
-                .map(drv -> {
-                    drv.setAdmitted(false);
-                    return repository.save(drv);
+                .map(order -> {
+                    order.setDelivered(true);
+                    return repository.save(order);
                 })
                 .orElseThrow( () -> new EntityNotFoundException(MESSAGE+id));
     }

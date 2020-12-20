@@ -5,6 +5,7 @@ import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.mine.controller.assembler.EmployeeModelAssembler;
 import ru.mine.domain.Employee;
 import ru.mine.repository.EmployeeRepository;
 
