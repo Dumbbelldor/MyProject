@@ -5,20 +5,24 @@ import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import ru.mine.controller.assembler.MenuModelAssembler;
 import ru.mine.domain.Menu;
 import ru.mine.repository.MenuRepository;
 
 import javax.persistence.EntityNotFoundException;
-import java.util.List;
+import java.util.*;
 
 @RestController
 @RequestMapping("/menu")
+//@SessionAttributes("menuMap")
 public class MenuController {
 
     private final MenuRepository repository;
 
     private final MenuModelAssembler assembler;
+
+    public static final Map<Menu, Integer> cart = new LinkedHashMap<>();
 
     private static final String MESSAGE = "Menu item is not found by id: ";
 
@@ -45,6 +49,41 @@ public class MenuController {
                 .orElseThrow(() -> new EntityNotFoundException(MESSAGE+id));
 
         return assembler.toModel(menu);
+    }
+
+    @GetMapping("/form")
+    public void addItemToCart(Integer id, Integer quantity) {
+        Optional<Menu> menuOptional = repository.findById(id);
+        Menu menu = null;
+        if (menuOptional.isPresent()) {
+            menu = menuOptional.get();
+        }
+        cart.put(menu, quantity);
+    }
+
+    @GetMapping("/show")
+    public CollectionModel<EntityModel<Menu>> showCart() {
+        List<Menu> list = new ArrayList<>(cart.keySet());
+        return assembler.toCollectionModel(list);
+    }
+
+//    @GetMapping("/form")
+//    public String showForm(
+//            Model model,
+//            @ModelAttribute("menuMap") Map<Menu, Integer> map) {
+//        model.addAttribute("menuItem", new Menu());
+//        return "sessionAttribute";
+//    }
+
+    @PostMapping("/form")
+    public void create(
+            @ModelAttribute Menu menu,
+            @ModelAttribute("menuMap") Map<Menu, Integer> map,
+            RedirectAttributes attributes) {
+        menu.setName("Тестовые блюда");
+        menu.setPrice(200);
+        map.put(menu,3);
+        attributes.addFlashAttribute("menuMap", map);
     }
 
     @PostMapping

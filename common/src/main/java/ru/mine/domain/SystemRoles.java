@@ -5,7 +5,7 @@ import lombok.ToString;
 
 @ToString
 @Getter
-enum SystemRoles {
+public enum SystemRoles {
 
     REGULAR_USER,
     PREMIUM_USER,

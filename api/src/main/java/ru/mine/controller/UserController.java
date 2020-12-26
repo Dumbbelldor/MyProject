@@ -6,6 +6,7 @@ import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.mine.controller.assembler.UserModelAssembler;
+import ru.mine.domain.SystemRoles;
 import ru.mine.domain.User;
 import ru.mine.repository.UserRepository;
 
@@ -50,26 +51,21 @@ public class UserController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public User create(@RequestBody User newUser) {
-        return repository.save(newUser);
+    public User create(String login, String password, String email) {
+        User user = new User();
+        user.setLogin(login);
+        user.setPassword(password);
+        user.setEmail(email);
+        user.setCreated(new Timestamp(System.currentTimeMillis()));
+        user.setChanged(new Timestamp(System.currentTimeMillis()));
+        user.setRole(SystemRoles.REGULAR_USER);
+        return repository.save(user);
     }
-//
-//    @PostMapping
-//    @ResponseStatus(HttpStatus.CREATED)
-//    public User smartCreateUser(String login, String password, String email) {
-//        User user = new User();
-//        user.setLogin(login);
-//        user.setPassword(password);
-//        user.setEmail(email);
-//        user.setCreated(new Timestamp(System.currentTimeMillis()));
-//        user.setChanged(new Timestamp(System.currentTimeMillis()));
-//        user.setRole(SystemRoles.REGULAR_USER);
-//        return repository.save(user);
-//    }
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.CREATED)
-    public User update(@RequestBody User newUser, @PathVariable Integer id) {
+    public User update(@PathVariable Integer id,
+                       @RequestBody User newUser) {
         return repository.findById(id)
                 .map(user -> {
                     user.setLogin(newUser.getLogin());

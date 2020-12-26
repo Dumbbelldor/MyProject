@@ -11,7 +11,7 @@ import java.sql.Date;
 public class Driver {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.TABLE)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @Column(name = "employee_id")
@@ -26,6 +26,6 @@ public class Driver {
     @Column(name = "driver_license_expiration_date")
     private Date licenseExpDate;
 
-    @Column(name = "is_admitted")
-    private boolean isAdmitted;
+    @Column(name = "available")
+    private boolean available;
 }

@@ -11,25 +11,25 @@ import java.sql.Timestamp;
 public class Order {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.TABLE)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @Column(name = "customer_id")
+    @JoinColumn(table = "m_users", name = "id",
+    foreignKey = @ForeignKey(name = "m_customer_orders_m_users_id_fk"))
     private Integer customerId;
 
-    @Column(name = "order_line")
-    private String orderLine;
+    @Column(name = "order_id")
+    private Integer orderLine;
 
     @Column(name = "order_time")
     private Timestamp orderTime;
 
     @Column(name = "courier_id")
+    @JoinColumn(name = "id", table = "m_drivers")
     private Integer courierId;
 
     @Column(name = "is_delivered")
     private boolean isDelivered;
-
-    @Column(name = "total_price")
-    private Integer totalPrice;
 
 }

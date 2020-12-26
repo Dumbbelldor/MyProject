@@ -11,7 +11,7 @@ import java.sql.Date;
 public class Employee {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.TABLE)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @Column(name = "full_name")

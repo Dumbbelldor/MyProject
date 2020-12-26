@@ -6,11 +6,16 @@ import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.mine.controller.assembler.OrderModelAssembler;
+import ru.mine.domain.Driver;
+import ru.mine.domain.Menu;
 import ru.mine.domain.Order;
+import ru.mine.repository.DriverRepository;
 import ru.mine.repository.OrderRepository;
 
 import javax.persistence.EntityNotFoundException;
-import java.util.List;
+import java.sql.Timestamp;
+import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 @RestController
 @RequestMapping("/orders")
@@ -20,12 +25,17 @@ public class OrderController {
 
     private final OrderModelAssembler assembler;
 
+    private final DriverRepository driverRepository;
+
     private static final String MESSAGE = "Order is not found by id: ";
 
     @Autowired
-    public OrderController(OrderRepository repository, OrderModelAssembler assembler) {
+    public OrderController(OrderRepository repository,
+                           OrderModelAssembler assembler,
+                           DriverRepository driverRepository) {
         this.repository = repository;
         this.assembler = assembler;
+        this.driverRepository = driverRepository;
     }
 
     /*All items*/
@@ -47,11 +57,11 @@ public class OrderController {
         return assembler.toModel(order);
     }
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public Order create(@RequestBody Order newOrder) {
-        return repository.save(newOrder);
+    @GetMapping("requestCart")
+    public List<Menu> show(){
+        return new ArrayList<>(MenuController.cart.keySet());
     }
+
 
     @PatchMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)

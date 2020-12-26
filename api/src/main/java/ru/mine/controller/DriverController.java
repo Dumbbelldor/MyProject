@@ -55,10 +55,10 @@ public class DriverController {
 
     @PatchMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public Driver flagAsFired(@PathVariable Integer id) {
+    public Driver flagAsBusy(@PathVariable Integer id) {
         return repository.findById(id)
                 .map(drv -> {
-                    drv.setAdmitted(false);
+                    drv.setAvailable(false);
                     return repository.save(drv);
                 })
                 .orElseThrow( () -> new EntityNotFoundException(MESSAGE+id));

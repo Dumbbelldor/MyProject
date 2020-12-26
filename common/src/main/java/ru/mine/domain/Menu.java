@@ -4,13 +4,14 @@ import lombok.Data;
 
 import javax.persistence.*;
 
+
 @Data
 @Entity
 @Table(name = "m_menu")
 public class Menu {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.TABLE)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @Column
@@ -21,4 +22,6 @@ public class Menu {
 
     @Column
     private Integer price;
+
 }
+
