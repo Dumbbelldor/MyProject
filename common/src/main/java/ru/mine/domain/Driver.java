@@ -7,7 +7,7 @@ import java.sql.Date;
 
 @Data
 @Entity
-@Table(name = "m_drivers")
+@Table(name = "drivers")
 public class Driver {
 
     @Id

@@ -7,7 +7,7 @@ import java.sql.Timestamp;
 
 @Data
 @Entity
-@Table(name = "m_users")
+@Table(name = "users")
 public class User {
 
     @Id
@@ -20,8 +20,8 @@ public class User {
     @Column
     private String password;
 
-    @Column(name = "is_deleted")
-    private boolean isDeleted;
+    @Column(name = "deleted")
+    private boolean deleted;
 
     @Column
     private String email;

@@ -3,9 +3,11 @@ package ru.mine.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.server.RepresentationModelAssembler;
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.HttpStatus;
+import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
-import ru.mine.controller.assembler.UserModelAssembler;
 import ru.mine.domain.SystemRoles;
 import ru.mine.domain.User;
 import ru.mine.repository.UserRepository;
@@ -13,21 +15,23 @@ import ru.mine.repository.UserRepository;
 import javax.persistence.EntityNotFoundException;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/users")
-public class UserController {
+public class UserController implements RepresentationModelAssembler<User, EntityModel<User>>{
 
     private final UserRepository repository;
     
-    private final UserModelAssembler assembler;
-
     private static final String MESSAGE = "User is not found by id: ";
 
     @Autowired
-    public UserController(UserRepository repository, UserModelAssembler assembler) {
+    public UserController(UserRepository repository) {
         this.repository = repository;
-        this.assembler = assembler;
     }
 
     /*All items*/
@@ -36,7 +40,7 @@ public class UserController {
     public CollectionModel<EntityModel<User>> getAll() {
         List<User> users = repository.findAll();
 
-        return assembler.toCollectionModel(users);
+        return toCollectionModel(users);
     }
 
     /*Single item*/
@@ -46,7 +50,7 @@ public class UserController {
         User user = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(MESSAGE+id));
 
-        return assembler.toModel(user);
+        return toModel(user);
     }
 
     @PostMapping
@@ -96,4 +100,20 @@ public class UserController {
         repository.deleteById(id);
     }
 
+    @Override
+    @NonNull
+    public EntityModel<User> toModel(@NonNull User user) {
+        return EntityModel.of(user,
+                WebMvcLinkBuilder.linkTo(methodOn(UserController.class).getSingle(user.getId())).withSelfRel(),
+                linkTo(methodOn(UserController.class).getAll()).withRel("users"));
+    }
+
+    @Override
+    @NonNull
+    public CollectionModel<EntityModel<User>> toCollectionModel(Iterable<? extends User> users) {
+        return StreamSupport.stream(users.spliterator(), false)
+                .map(this::toModel)
+                .collect(Collectors.collectingAndThen(Collectors.toList(), CollectionModel::of));
+    }
 }
+

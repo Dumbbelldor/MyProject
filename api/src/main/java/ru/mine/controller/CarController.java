@@ -3,29 +3,34 @@ package ru.mine.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.server.RepresentationModelAssembler;
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.HttpStatus;
+import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
-import ru.mine.controller.assembler.CarModelAssembler;
 import ru.mine.domain.Car;
 import ru.mine.repository.CarRepository;
 
 import javax.persistence.EntityNotFoundException;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/cars")
-public class CarController {
+public class CarController implements
+        RepresentationModelAssembler<Car, EntityModel<Car>> {
 
     private final CarRepository repository;
-
-    private final CarModelAssembler assembler;
 
     private static final String MESSAGE = "Car is not found by id: ";
 
     @Autowired
-    public CarController(CarRepository repository, CarModelAssembler assembler) {
+    public CarController(CarRepository repository) {
         this.repository = repository;
-        this.assembler = assembler;
     }
 
     /*All items*/
@@ -34,7 +39,7 @@ public class CarController {
     public CollectionModel<EntityModel<Car>> getAll() {
         List<Car> cars = repository.findAll();
 
-        return assembler.toCollectionModel(cars);
+        return toCollectionModel(cars);
     }
 
     /*Single item*/
@@ -44,7 +49,7 @@ public class CarController {
         Car car = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(MESSAGE+id));
 
-        return assembler.toModel(car);
+        return toModel(car);
     }
 
     @PostMapping
@@ -68,5 +73,21 @@ public class CarController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteById(@PathVariable Integer id) {
         repository.deleteById(id);
+    }
+
+    @Override
+    @NonNull
+    public EntityModel<Car> toModel(@NonNull Car car) {
+        return EntityModel.of(car,
+                WebMvcLinkBuilder.linkTo(methodOn(CarController.class).getSingle(car.getId())).withSelfRel(),
+                linkTo(methodOn(CarController.class).getAll()).withRel("cars"));
+    }
+
+    @Override
+    @NonNull
+    public CollectionModel<EntityModel<Car>> toCollectionModel(Iterable<? extends Car> cars) {
+        return StreamSupport.stream(cars.spliterator(), false)
+                .map(this::toModel)
+                .collect(Collectors.collectingAndThen(Collectors.toList(), CollectionModel::of));
     }
 }

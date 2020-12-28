@@ -7,7 +7,7 @@ import javax.persistence.*;
 
 @Data
 @Entity
-@Table(name = "m_menu")
+@Table(name = "products")
 public class Menu {
 
     @Id
@@ -17,8 +17,8 @@ public class Menu {
     @Column
     private String name;
 
-    @Column(name = "is_available")
-    private boolean isAvailable;
+    @Column(name = "available")
+    private boolean available;
 
     @Column
     private Integer price;

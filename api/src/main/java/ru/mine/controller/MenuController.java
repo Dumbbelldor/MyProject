@@ -3,33 +3,38 @@ package ru.mine.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.server.RepresentationModelAssembler;
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.HttpStatus;
+import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import ru.mine.controller.assembler.MenuModelAssembler;
 import ru.mine.domain.Menu;
 import ru.mine.repository.MenuRepository;
 
 import javax.persistence.EntityNotFoundException;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/menu")
 //@SessionAttributes("menuMap")
-public class MenuController {
+public class MenuController implements
+        RepresentationModelAssembler<Menu, EntityModel<Menu>> {
 
     private final MenuRepository repository;
-
-    private final MenuModelAssembler assembler;
 
     public static final Map<Menu, Integer> cart = new LinkedHashMap<>();
 
     private static final String MESSAGE = "Menu item is not found by id: ";
 
     @Autowired
-    public MenuController(MenuRepository repository, MenuModelAssembler assembler) {
+    public MenuController(MenuRepository repository) {
         this.repository = repository;
-        this.assembler = assembler;
     }
 
     /*All items*/
@@ -38,7 +43,7 @@ public class MenuController {
     public CollectionModel<EntityModel<Menu>> getAll() {
         List<Menu> menu = repository.findAll();
 
-        return assembler.toCollectionModel(menu);
+        return toCollectionModel(menu);
     }
 
     /*Single item*/
@@ -48,7 +53,7 @@ public class MenuController {
         Menu menu = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(MESSAGE+id));
 
-        return assembler.toModel(menu);
+        return toModel(menu);
     }
 
     @GetMapping("/form")
@@ -64,7 +69,7 @@ public class MenuController {
     @GetMapping("/show")
     public CollectionModel<EntityModel<Menu>> showCart() {
         List<Menu> list = new ArrayList<>(cart.keySet());
-        return assembler.toCollectionModel(list);
+        return toCollectionModel(list);
     }
 
 //    @GetMapping("/form")
@@ -107,5 +112,21 @@ public class MenuController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteById(@PathVariable Integer id) {
         repository.deleteById(id);
+    }
+
+    @Override
+    @NonNull
+    public EntityModel<Menu> toModel(@NonNull Menu menu) {
+        return EntityModel.of(menu,
+                WebMvcLinkBuilder.linkTo(methodOn(MenuController.class).getSingle(menu.getId())).withSelfRel(),
+                linkTo(methodOn(MenuController.class).getAll()).withRel("menu"));
+    }
+
+    @Override
+    @NonNull
+    public CollectionModel<EntityModel<Menu>> toCollectionModel(Iterable<? extends Menu> menu) {
+        return StreamSupport.stream(menu.spliterator(), false)
+                .map(this::toModel)
+                .collect(Collectors.collectingAndThen(Collectors.toList(), CollectionModel::of));
     }
 }

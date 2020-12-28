@@ -3,29 +3,34 @@ package ru.mine.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.server.RepresentationModelAssembler;
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.HttpStatus;
+import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
-import ru.mine.controller.assembler.DriverModelAssembler;
 import ru.mine.domain.Driver;
 import ru.mine.repository.DriverRepository;
 
 import javax.persistence.EntityNotFoundException;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/drivers")
-public class DriverController {
+public class DriverController implements
+        RepresentationModelAssembler<Driver, EntityModel<Driver>> {
 
     private final DriverRepository repository;
-
-    private final DriverModelAssembler assembler;
 
     private static final String MESSAGE = "Driver is not found by id: ";
 
     @Autowired
-    public DriverController(DriverRepository repository, DriverModelAssembler assembler) {
+    public DriverController(DriverRepository repository) {
         this.repository = repository;
-        this.assembler = assembler;
     }
 
     /*All items*/
@@ -34,7 +39,7 @@ public class DriverController {
     public CollectionModel<EntityModel<Driver>> getAll() {
         List<Driver> drivers = repository.findAll();
 
-        return assembler.toCollectionModel(drivers);
+        return toCollectionModel(drivers);
     }
 
     /*Single item*/
@@ -44,7 +49,7 @@ public class DriverController {
         Driver driver = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(MESSAGE+id));
 
-        return assembler.toModel(driver);
+        return toModel(driver);
     }
 
     @PostMapping
@@ -68,5 +73,21 @@ public class DriverController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteById(@PathVariable Integer id) {
         repository.deleteById(id);
+    }
+
+    @Override
+    @NonNull
+    public EntityModel<Driver> toModel(@NonNull Driver driver) {
+        return EntityModel.of(driver,
+                WebMvcLinkBuilder.linkTo(methodOn(DriverController.class).getSingle(driver.getId())).withSelfRel(),
+                linkTo(methodOn(DriverController.class).getAll()).withRel("drivers"));
+    }
+
+    @Override
+    @NonNull
+    public CollectionModel<EntityModel<Driver>> toCollectionModel(Iterable<? extends Driver> drivers) {
+        return StreamSupport.stream(drivers.spliterator(), false)
+                .map(this::toModel)
+                .collect(Collectors.collectingAndThen(Collectors.toList(), CollectionModel::of));
     }
 }

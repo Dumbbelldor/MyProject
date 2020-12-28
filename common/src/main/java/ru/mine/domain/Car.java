@@ -6,7 +6,7 @@ import javax.persistence.*;
 
 @Data
 @Entity
-@Table(name = "m_cars")
+@Table(name = "cars")
 public class Car {
 
     @Id
@@ -29,6 +29,6 @@ public class Car {
     @Column(name = "driver_id")
     private Integer driverId;
 
-    @Column(name = "is_available")
-    private boolean isAvailable;
+    @Column(name = "available")
+    private boolean available;
 }

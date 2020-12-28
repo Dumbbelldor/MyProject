@@ -7,7 +7,7 @@ import java.sql.Date;
 
 @Data
 @Entity
-@Table(name = "m_employees")
+@Table(name = "employees")
 public class Employee {
 
     @Id
@@ -36,6 +36,6 @@ public class Employee {
     @Column
     private int payroll;
 
-    @Column(name = "is_fired")
-    private boolean isFired;
+    @Column(name = "fired")
+    private boolean fired;
 }

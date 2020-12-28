@@ -7,7 +7,7 @@ import java.sql.Timestamp;
 
 @Data
 @Entity
-@Table(name = "m_customer_orders")
+@Table(name = "order_info")
 public class Order {
 
     @Id
@@ -29,7 +29,7 @@ public class Order {
     @JoinColumn(name = "id", table = "m_drivers")
     private Integer courierId;
 
-    @Column(name = "is_delivered")
-    private boolean isDelivered;
+    @Column(name = "delivered")
+    private boolean delivered;
 
 }

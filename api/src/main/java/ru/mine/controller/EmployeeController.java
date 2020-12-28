@@ -3,30 +3,34 @@ package ru.mine.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.server.RepresentationModelAssembler;
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.HttpStatus;
+import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
-import ru.mine.controller.assembler.EmployeeModelAssembler;
 import ru.mine.domain.Employee;
 import ru.mine.repository.EmployeeRepository;
 
 import javax.persistence.EntityNotFoundException;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/employees")
-public class EmployeeController {
+public class EmployeeController implements
+        RepresentationModelAssembler<Employee, EntityModel<Employee>> {
 
     private final EmployeeRepository repository;
-
-    private final EmployeeModelAssembler assembler;
 
     private static final String MESSAGE = "Employee is not found by id: ";
 
     @Autowired
-    public EmployeeController(EmployeeRepository repository,
-                              EmployeeModelAssembler assembler) {
+    public EmployeeController(EmployeeRepository repository) {
         this.repository = repository;
-        this.assembler = assembler;
     }
 
     /*All items*/
@@ -35,7 +39,7 @@ public class EmployeeController {
     public CollectionModel<EntityModel<Employee>> getAll() {
         List<Employee> employees = repository.findAll();
 
-        return assembler.toCollectionModel(employees);
+        return toCollectionModel(employees);
     }
 
     /*Single item*/
@@ -45,7 +49,7 @@ public class EmployeeController {
         Employee employee = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(MESSAGE+id));
 
-        return assembler.toModel(employee);
+        return toModel(employee);
     }
 
     @PostMapping
@@ -69,5 +73,21 @@ public class EmployeeController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteById(@PathVariable Integer id) {
         repository.deleteById(id);
+    }
+
+    @Override
+    @NonNull
+    public EntityModel<Employee> toModel(@NonNull Employee employee) {
+        return EntityModel.of(employee,
+                WebMvcLinkBuilder.linkTo(methodOn(EmployeeController.class).getSingle(employee.getId())).withSelfRel(),
+                linkTo(methodOn(EmployeeController.class).getAll()).withRel("employees"));
+    }
+
+    @Override
+    @NonNull
+    public CollectionModel<EntityModel<Employee>> toCollectionModel(Iterable<? extends Employee> employees) {
+        return StreamSupport.stream(employees.spliterator(), false)
+                .map(this::toModel)
+                .collect(Collectors.collectingAndThen(Collectors.toList(), CollectionModel::of));
     }
 }

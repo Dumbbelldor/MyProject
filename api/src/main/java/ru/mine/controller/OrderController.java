@@ -3,27 +3,30 @@ package ru.mine.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.server.RepresentationModelAssembler;
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.HttpStatus;
+import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
-import ru.mine.controller.assembler.OrderModelAssembler;
-import ru.mine.domain.Driver;
 import ru.mine.domain.Menu;
 import ru.mine.domain.Order;
 import ru.mine.repository.DriverRepository;
 import ru.mine.repository.OrderRepository;
 
 import javax.persistence.EntityNotFoundException;
-import java.sql.Timestamp;
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/orders")
-public class OrderController {
+public class OrderController implements
+        RepresentationModelAssembler<Order, EntityModel<Order>> {
 
     private final OrderRepository repository;
-
-    private final OrderModelAssembler assembler;
 
     private final DriverRepository driverRepository;
 
@@ -31,10 +34,8 @@ public class OrderController {
 
     @Autowired
     public OrderController(OrderRepository repository,
-                           OrderModelAssembler assembler,
                            DriverRepository driverRepository) {
         this.repository = repository;
-        this.assembler = assembler;
         this.driverRepository = driverRepository;
     }
 
@@ -44,7 +45,7 @@ public class OrderController {
     public CollectionModel<EntityModel<Order>> getAll() {
         List<Order> orders = repository.findAll();
 
-        return assembler.toCollectionModel(orders);
+        return toCollectionModel(orders);
     }
 
     /*Single item*/
@@ -54,7 +55,7 @@ public class OrderController {
         Order order = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(MESSAGE+id));
 
-        return assembler.toModel(order);
+        return toModel(order);
     }
 
     @GetMapping("requestCart")
@@ -78,5 +79,21 @@ public class OrderController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteById(@PathVariable Integer id) {
         repository.deleteById(id);
+    }
+
+    @Override
+    @NonNull
+    public EntityModel<Order> toModel(@NonNull Order order) {
+        return EntityModel.of(order,
+                WebMvcLinkBuilder.linkTo(methodOn(OrderController.class).getSingle(order.getId())).withSelfRel(),
+                linkTo(methodOn(OrderController.class).getAll()).withRel("orders"));
+    }
+
+    @Override
+    @NonNull
+    public CollectionModel<EntityModel<Order>> toCollectionModel(Iterable<? extends Order> orders) {
+        return StreamSupport.stream(orders.spliterator(), false)
+                .map(this::toModel)
+                .collect(Collectors.collectingAndThen(Collectors.toList(), CollectionModel::of));
     }
 }
