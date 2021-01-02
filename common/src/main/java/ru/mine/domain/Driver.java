@@ -3,12 +3,15 @@ package ru.mine.domain;
 import lombok.Data;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.sql.Date;
 
 @Data
 @Entity
 @Table(name = "drivers")
-public class Driver {
+public class Driver implements Serializable {
+
+    static final long serialVersionUID = 123L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

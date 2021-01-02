@@ -60,13 +60,12 @@ public class DriverController implements
 
     @PatchMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public Driver flagAsBusy(@PathVariable Integer id) {
-        return repository.findById(id)
-                .map(drv -> {
-                    drv.setAvailable(false);
-                    return repository.save(drv);
-                })
-                .orElseThrow( () -> new EntityNotFoundException(MESSAGE+id));
+    public Driver flagAsAvailable(@PathVariable Integer id) {
+        Driver driver = repository.findByIdAndAvailableFalse(id);
+        if (driver != null) {
+            driver.setAvailable(true);
+            return repository.save(driver);
+        } else throw new EntityNotFoundException(MESSAGE+id);
     }
 
     @DeleteMapping("/{id}")
@@ -74,6 +73,8 @@ public class DriverController implements
     public void deleteById(@PathVariable Integer id) {
         repository.deleteById(id);
     }
+
+    /*Model Builder Section*/
 
     @Override
     @NonNull

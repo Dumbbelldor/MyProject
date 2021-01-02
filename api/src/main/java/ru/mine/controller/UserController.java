@@ -10,6 +10,7 @@ import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
 import ru.mine.domain.SystemRoles;
 import ru.mine.domain.User;
+import ru.mine.dto.UserDTO;
 import ru.mine.repository.UserRepository;
 
 import javax.persistence.EntityNotFoundException;
@@ -23,7 +24,8 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/users")
-public class UserController implements RepresentationModelAssembler<User, EntityModel<User>>{
+public class UserController implements
+        RepresentationModelAssembler<User, EntityModel<User>> {
 
     private final UserRepository repository;
     
@@ -55,11 +57,11 @@ public class UserController implements RepresentationModelAssembler<User, Entity
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public User create(String login, String password, String email) {
+    public User create(UserDTO userDTO) {
         User user = new User();
-        user.setLogin(login);
-        user.setPassword(password);
-        user.setEmail(email);
+        user.setLogin(userDTO.getLogin());
+        user.setPassword(userDTO.getPassword());
+        user.setEmail(userDTO.getEmail());
         user.setCreated(new Timestamp(System.currentTimeMillis()));
         user.setChanged(new Timestamp(System.currentTimeMillis()));
         user.setRole(SystemRoles.REGULAR_USER);
@@ -69,14 +71,13 @@ public class UserController implements RepresentationModelAssembler<User, Entity
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.CREATED)
     public User update(@PathVariable Integer id,
-                       @RequestBody User newUser) {
+                       @RequestBody UserDTO userDTO) {
         return repository.findById(id)
                 .map(user -> {
-                    user.setLogin(newUser.getLogin());
-                    user.setPassword(newUser.getPassword());
-                    user.setEmail(newUser.getEmail());
+                    user.setLogin(userDTO.getLogin());
+                    user.setPassword(userDTO.getPassword());
+                    user.setEmail(userDTO.getEmail());
                     user.setChanged(new Timestamp(System.currentTimeMillis()));
-                    user.setRole(newUser.getRole());
                     return repository.save(user);
                 })
                 .orElseThrow( () -> new EntityNotFoundException(MESSAGE+id));
@@ -100,6 +101,8 @@ public class UserController implements RepresentationModelAssembler<User, Entity
         repository.deleteById(id);
     }
 
+
+    /*Model Builder Section*/
     @Override
     @NonNull
     public EntityModel<User> toModel(@NonNull User user) {

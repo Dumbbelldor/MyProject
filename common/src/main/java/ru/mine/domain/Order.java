@@ -3,15 +3,18 @@ package ru.mine.domain;
 import lombok.Data;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.sql.Timestamp;
 
 @Data
 @Entity
 @Table(name = "order_info")
-public class Order {
+public class Order implements Serializable {
+
+    static final long serialVersionUID = 123L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
 
     @Column(name = "customer_id")
@@ -19,8 +22,8 @@ public class Order {
     foreignKey = @ForeignKey(name = "m_customer_orders_m_users_id_fk"))
     private Integer customerId;
 
-    @Column(name = "order_id")
-    private Integer orderLine;
+    @Column(name = "order_line")
+    private String orderLine;
 
     @Column(name = "order_time")
     private Timestamp orderTime;
@@ -29,7 +32,10 @@ public class Order {
     @JoinColumn(name = "id", table = "m_drivers")
     private Integer courierId;
 
-    @Column(name = "delivered")
-    private boolean delivered;
+    @Column(name = "status")
+    @Enumerated(EnumType.STRING)
+    private Status status;
 
+    @Column(name = "total_price")
+    private int totalPrice;
 }
