@@ -44,7 +44,7 @@ public class ProductController implements
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.FOUND)
     public EntityModel<Product> getSingle(@PathVariable Integer id) {
-        Product product = findById(id);
+        Product product = validFindById(id);
         return toModel(product);
     }
 
@@ -62,7 +62,7 @@ public class ProductController implements
     @PutMapping
     @ResponseStatus(HttpStatus.OK)
     public EntityModel<Product> update(Integer id, ProductDTO productDTO) {
-        Product product = findById(id);
+        Product product = validFindById(id);
 
         if (productDTO.getName() != null) product.setName(productDTO.getName());
         if (productDTO.getPrice() != 0) product.setPrice(productDTO.getPrice());
@@ -71,9 +71,9 @@ public class ProductController implements
 
     @PatchMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public EntityModel<Product> flagAsUnavailable(@PathVariable Integer id) {
-        Product product = findById(id);
-        product.setAvailable(false);
+    public EntityModel<Product> changeAvailableFlag(@PathVariable Integer id, boolean bool) {
+        Product product = validFindById(id);
+        product.setAvailable(bool);
         return toModel(repository.save(product));
     }
 
@@ -85,7 +85,7 @@ public class ProductController implements
 
     /*Misc*/
 
-    private Product findById(Integer id) {
+    private Product validFindById(Integer id) {
         if (id > 0) {
             return repository.findById(id)
                     .orElseThrow(() -> new EntityNotFoundException("Product is not found by id: " + id));

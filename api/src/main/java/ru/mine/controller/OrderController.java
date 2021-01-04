@@ -12,9 +12,8 @@ import ru.mine.domain.Product;
 import ru.mine.domain.Order;
 import ru.mine.domain.Status;
 import ru.mine.repository.OrderRepository;
-import ru.mine.utils.DriverAssignation;
+import ru.mine.utils.DriverUtils;
 
-import javax.persistence.EntityNotFoundException;
 import javax.servlet.http.HttpSession;
 import java.sql.Timestamp;
 import java.util.*;
@@ -45,22 +44,29 @@ public class OrderController implements
     @GetMapping
     @ResponseStatus(HttpStatus.FOUND)
     public CollectionModel<EntityModel<Order>> getAll() {
-        List<Order> orders = repository.findAll();
-        return toCollectionModel(orders);
+        return toCollectionModel(repository.findAll());
     }
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.FOUND)
     public EntityModel<Order> getSingle(@PathVariable Integer id) {
-        Order order = validFindById(id);
-        return toModel(order);
+        return toModel(repository.findById(id).orElseThrow());
     }
 
     @PatchMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public EntityModel<Order> changeStatus(@PathVariable Integer id, Status status) {
-        Order order = validFindById(id);
+        Order order = repository.findById(id).orElseThrow();
         order.setStatus(status);
+        return toModel(repository.save(order));
+    }
+
+    @PatchMapping
+    @ResponseStatus(HttpStatus.OK)
+    public EntityModel<Order> assignDriver(Integer orderId,
+                                           Integer driverId) {
+        Order order = repository.findById(orderId).orElseThrow();
+        order.setCourierId(driverId);
         return toModel(repository.save(order));
     }
 
@@ -79,7 +85,7 @@ public class OrderController implements
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public EntityModel<Order> completeOrder(Integer customerId) {
+    public EntityModel<Order> create(Integer customerId) {
         Order order = new Order();
         Map<Product, Integer> cart = getCartMap();
         List<Product> products = new LinkedList<>(cart.keySet());
@@ -91,7 +97,7 @@ public class OrderController implements
         if (products.size() == quantity.size()) {
             for (int i = 0; i < products.size(); i++) {
                 orderLine = orderLine.concat("\"" + products.get(i).getName()
-                        + " x" + quantity.get(i) + "\"\n");
+                        + "\" x" + quantity.get(i) + "\n");
                 totalPrice += products.get(i).getPrice() * quantity.get(i);
             }
         } else throw new ArithmeticException("That shouldn't have happened");
@@ -100,27 +106,21 @@ public class OrderController implements
         puts them into a list, randomly chooses one of them in [1, size) range,
         assign him to the order, then flags him as busy (unavailable)*/
         Integer driverId;
-        if (DriverAssignation.isAnyoneReady()) {
-            driverId = DriverAssignation.assignAndGetId(true);
+        if (DriverUtils.isAnyoneReady()) {
+            driverId = DriverUtils.assignAndGetId(true);
             order.setStatus(Status.IN_PROGRESS);
         } else {
-            driverId = DriverAssignation.assignAndGetId(false);
+            driverId = DriverUtils.assignAndGetId(false);
             order.setStatus(Status.AWAITS);
         }
 
         order.setCustomerId(customerId);
         order.setOrderLine(orderLine);
-        order.setOrderTime(new Timestamp(System.currentTimeMillis()));
+        order.setCreationTime(new Timestamp(System.currentTimeMillis()));
         order.setCourierId(driverId);
         order.setTotalPrice(totalPrice);
 
         return toModel(repository.save(order));
-    }
-
-    @PatchMapping
-    @ResponseStatus(HttpStatus.I_AM_A_TEAPOT)
-    public String update() {
-        return "Your order is already in processing, to change anything from now you need to contact our manager";
     }
 
     /*Misc*/
@@ -130,13 +130,6 @@ public class OrderController implements
         if (session.getAttribute("cart") != null) {
             return (Map<Product, Integer>) session.getAttribute("cart");
         } else throw new NullPointerException("Cart is not yet filled with stuff");
-    }
-
-    private Order validFindById(Integer id) {
-        if (id > 0) {
-            return repository.findById(id)
-                    .orElseThrow(() -> new EntityNotFoundException("Order is not found by id: " + id));
-        } else throw new IllegalArgumentException("Id must be positive and non-null");
     }
 
     /*Model Builder Section*/

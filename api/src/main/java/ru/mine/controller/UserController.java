@@ -13,9 +13,7 @@ import ru.mine.domain.User;
 import ru.mine.dto.UserDTO;
 import ru.mine.repository.UserRepository;
 
-import javax.persistence.EntityNotFoundException;
 import java.sql.Timestamp;
-import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -29,8 +27,6 @@ public class UserController implements
 
     private final UserRepository repository;
     
-    private static final String MESSAGE = "User is not found by id: ";
-
     @Autowired
     public UserController(UserRepository repository) {
         this.repository = repository;
@@ -40,24 +36,19 @@ public class UserController implements
     @GetMapping
     @ResponseStatus(HttpStatus.FOUND)
     public CollectionModel<EntityModel<User>> getAll() {
-        List<User> users = repository.findAll();
-
-        return toCollectionModel(users);
+        return toCollectionModel(repository.findAll());
     }
 
     /*Single item*/
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.FOUND)
     public EntityModel<User> getSingle(@PathVariable Integer id) {
-        User user = repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(MESSAGE+id));
-
-        return toModel(user);
+        return toModel(repository.findById(id).orElseThrow());
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public User create(UserDTO userDTO) {
+    public EntityModel<User> create(@RequestBody UserDTO userDTO) {
         User user = new User();
         user.setLogin(userDTO.getLogin());
         user.setPassword(userDTO.getPassword());
@@ -65,34 +56,38 @@ public class UserController implements
         user.setCreated(new Timestamp(System.currentTimeMillis()));
         user.setChanged(new Timestamp(System.currentTimeMillis()));
         user.setRole(SystemRoles.REGULAR_USER);
-        return repository.save(user);
+        return toModel(repository.save(user));
     }
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.CREATED)
-    public User update(@PathVariable Integer id,
-                       @RequestBody UserDTO userDTO) {
-        return repository.findById(id)
-                .map(user -> {
-                    user.setLogin(userDTO.getLogin());
-                    user.setPassword(userDTO.getPassword());
-                    user.setEmail(userDTO.getEmail());
-                    user.setChanged(new Timestamp(System.currentTimeMillis()));
-                    return repository.save(user);
-                })
-                .orElseThrow( () -> new EntityNotFoundException(MESSAGE+id));
+    public EntityModel<User> update(@PathVariable Integer id,
+                                    @RequestBody UserDTO userDTO) {
+        User user = repository.findById(id).orElseThrow();
+        user.setLogin(userDTO.getLogin());
+        user.setPassword(userDTO.getPassword());
+        user.setEmail(userDTO.getEmail());
+        user.setChanged(new Timestamp(System.currentTimeMillis()));
+        return toModel(repository.save(user));
+    }
+
+    @PatchMapping
+    @ResponseStatus(HttpStatus.OK)
+    public EntityModel<User> changeRole(Integer id,
+                                        SystemRoles role) {
+        User user = repository.findById(id).orElseThrow();
+        user.setRole(role);
+        return toModel(user);
     }
 
     @PatchMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public User flagAsDeleted(@PathVariable Integer id) {
-        return repository.findById(id)
-                .map(user -> {
-                    user.setDeleted(true);
-                    user.setChanged(new Timestamp(System.currentTimeMillis()));
-                    return repository.save(user);
-                })
-                .orElseThrow( () -> new EntityNotFoundException(MESSAGE+id));
+    public EntityModel<User> changeDeletedFlag(@PathVariable Integer id,
+                                               boolean bool) {
+        User user = repository.findById(id).orElseThrow();
+        user.setDeleted(bool);
+        user.setChanged(new Timestamp(System.currentTimeMillis()));
+        return toModel(repository.save(user));
     }
 
     @DeleteMapping("/{id}")
@@ -103,6 +98,7 @@ public class UserController implements
 
 
     /*Model Builder Section*/
+
     @Override
     @NonNull
     public EntityModel<User> toModel(@NonNull User user) {

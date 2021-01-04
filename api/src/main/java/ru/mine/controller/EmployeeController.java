@@ -9,10 +9,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
 import ru.mine.domain.Employee;
+import ru.mine.domain.SystemRoles;
+import ru.mine.dto.EmployeeDTO;
 import ru.mine.repository.EmployeeRepository;
 
-import javax.persistence.EntityNotFoundException;
-import java.util.List;
+import java.time.LocalDate;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -26,8 +27,6 @@ public class EmployeeController implements
 
     private final EmployeeRepository repository;
 
-    private static final String MESSAGE = "Employee is not found by id: ";
-
     @Autowired
     public EmployeeController(EmployeeRepository repository) {
         this.repository = repository;
@@ -37,36 +36,70 @@ public class EmployeeController implements
     @GetMapping
     @ResponseStatus(HttpStatus.FOUND)
     public CollectionModel<EntityModel<Employee>> getAll() {
-        List<Employee> employees = repository.findAll();
-
-        return toCollectionModel(employees);
+        return toCollectionModel(repository.findAll());
     }
 
     /*Single item*/
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.FOUND)
     public EntityModel<Employee> getSingle(@PathVariable Integer id) {
-        Employee employee = repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(MESSAGE+id));
-
-        return toModel(employee);
+        return toModel(repository.findById(id).orElseThrow());
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Employee create(@RequestBody Employee newEmployee) {
-        return repository.save(newEmployee);
+    public EntityModel<Employee> create(@RequestBody EmployeeDTO newEmployee) {
+        Employee employee = new Employee();
+        employee.setFullName(newEmployee.getFullName());
+        employee.setBirthDate(newEmployee.getBirthDate());
+        employee.setRegistration(newEmployee.getRegistration());
+        employee.setHiringDate(LocalDate.now());
+        employee.setPosition(SystemRoles.EMPLOYEE);
+        //magic const to write typical first-time contract duration
+        employee.setContractExpiration(LocalDate.now().plusYears(1));
+        employee.setPayroll(newEmployee.getPayroll());
+        employee.setPhoneNumber(newEmployee.getPhoneNumber());
+        return toModel(repository.save(employee));
+    }
+
+    @PutMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public EntityModel<Employee> update(@PathVariable Integer id,
+                                        @RequestBody EmployeeDTO newEmployee) {
+        Employee employee = repository.findById(id).orElseThrow();
+        employee.setFullName(newEmployee.getFullName());
+        employee.setBirthDate(newEmployee.getBirthDate());
+        employee.setRegistration(newEmployee.getRegistration());
+        employee.setPayroll(newEmployee.getPayroll());
+        employee.setPhoneNumber(newEmployee.getPhoneNumber());
+        return toModel(repository.save(employee));
+    }
+
+    @PatchMapping("/contract")
+    @ResponseStatus(HttpStatus.OK)
+    public EntityModel<Employee> extendContract(Integer employeeId,
+                                                int years) {
+        Employee employee = repository.findById(employeeId).orElseThrow();
+        employee.setContractExpiration(employee.getContractExpiration().plusYears(years));
+        return toModel(repository.save(employee));
     }
 
     @PatchMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public Employee flagAsFired(@PathVariable Integer id) {
-        return repository.findById(id)
-                .map(emp -> {
-                    emp.setFired(true);
-                    return repository.save(emp);
-                })
-                .orElseThrow( () -> new EntityNotFoundException(MESSAGE+id));
+    public EntityModel<Employee> changeFiredFlag(@PathVariable Integer id,
+                                             boolean bool) {
+        Employee employee = repository.findById(id).orElseThrow();
+        employee.setFired(bool);
+        return toModel(repository.save(employee));
+    }
+
+    @PatchMapping("/position")
+    @ResponseStatus(HttpStatus.OK)
+    public EntityModel<Employee> changePosition(Integer id,
+                                                SystemRoles role) {
+        Employee employee = repository.findById(id).orElseThrow();
+        employee.setPosition(role);
+        return toModel(repository.save(employee));
     }
 
     @DeleteMapping("/{id}")
@@ -77,6 +110,7 @@ public class EmployeeController implements
 
 
     /*Model Builder Section*/
+
     @Override
     @NonNull
     public EntityModel<Employee> toModel(@NonNull Employee employee) {

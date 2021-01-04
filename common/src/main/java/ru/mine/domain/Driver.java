@@ -4,7 +4,7 @@ import lombok.Data;
 
 import javax.persistence.*;
 import java.io.Serializable;
-import java.sql.Date;
+import java.time.LocalDate;
 
 @Data
 @Entity
@@ -14,7 +14,7 @@ public class Driver implements Serializable {
     static final long serialVersionUID = 123L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
 
     @Column(name = "employee_id")
@@ -27,7 +27,7 @@ public class Driver implements Serializable {
     private Long licenseId;
 
     @Column(name = "driver_license_expiration_date")
-    private Date licenseExpDate;
+    private LocalDate licenseExpDate;
 
     @Column(name = "available")
     private boolean available;

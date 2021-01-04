@@ -9,10 +9,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
 import ru.mine.domain.Driver;
+import ru.mine.dto.DriverDTO;
 import ru.mine.repository.DriverRepository;
 
-import javax.persistence.EntityNotFoundException;
-import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -26,8 +25,6 @@ public class DriverController implements
 
     private final DriverRepository repository;
 
-    private static final String MESSAGE = "Driver is not found by id: ";
-
     @Autowired
     public DriverController(DriverRepository repository) {
         this.repository = repository;
@@ -37,35 +34,53 @@ public class DriverController implements
     @GetMapping
     @ResponseStatus(HttpStatus.FOUND)
     public CollectionModel<EntityModel<Driver>> getAll() {
-        List<Driver> drivers = repository.findAll();
-
-        return toCollectionModel(drivers);
+        return toCollectionModel(repository.findAll());
     }
 
     /*Single item*/
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.FOUND)
     public EntityModel<Driver> getSingle(@PathVariable Integer id) {
-        Driver driver = repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(MESSAGE+id));
-
-        return toModel(driver);
+        return toModel(repository.findById(id).orElseThrow());
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Driver create(@RequestBody Driver newDriver) {
-        return repository.save(newDriver);
+    public EntityModel<Driver> create(@RequestBody DriverDTO newDriver) {
+        Driver driver = new Driver();
+        driver.setEmployeeId(newDriver.getEmployeeId());
+        driver.setLicenseId(newDriver.getLicenseId());
+        driver.setLicenseExpDate(newDriver.getLicenseExpDate());
+        return toModel(repository.save(driver));
+    }
+
+    @PutMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public EntityModel<Driver> update(@PathVariable Integer id,
+                                      @RequestBody DriverDTO newDriver) {
+        Driver driver = repository.findById(id).orElseThrow();
+        driver.setEmployeeId(newDriver.getEmployeeId());
+        driver.setLicenseId(newDriver.getLicenseId());
+        driver.setLicenseExpDate(newDriver.getLicenseExpDate());
+        return toModel(repository.save(driver));
     }
 
     @PatchMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public Driver flagAsAvailable(@PathVariable Integer id) {
-        Driver driver = repository.findByIdAndAvailableFalse(id);
-        if (driver != null) {
-            driver.setAvailable(true);
-            return repository.save(driver);
-        } else throw new EntityNotFoundException(MESSAGE+id);
+    public EntityModel<Driver> changeAvailableFlag(@PathVariable Integer id,
+                                                  boolean bool) {
+        Driver driver = repository.findById(id).orElseThrow();
+        driver.setAvailable(bool);
+        return toModel(repository.save(driver));
+    }
+
+    @PatchMapping
+    @ResponseStatus(HttpStatus.OK)
+    public EntityModel<Driver> assignCar(Integer driverId,
+                                         Integer carId) {
+        Driver driver = repository.findById(driverId).orElseThrow();
+        driver.setCarId(carId);
+        return toModel(repository.save(driver));
     }
 
     @DeleteMapping("/{id}")

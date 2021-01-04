@@ -25,8 +25,8 @@ public class Order implements Serializable {
     @Column(name = "order_line")
     private String orderLine;
 
-    @Column(name = "order_time")
-    private Timestamp orderTime;
+    @Column(name = "creation_time")
+    private Timestamp creationTime;
 
     @Column(name = "courier_id")
     @JoinColumn(name = "id", table = "m_drivers")

@@ -9,10 +9,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
 import ru.mine.domain.Car;
+import ru.mine.dto.CarDTO;
 import ru.mine.repository.CarRepository;
 
-import javax.persistence.EntityNotFoundException;
-import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -26,8 +25,6 @@ public class CarController implements
 
     private final CarRepository repository;
 
-    private static final String MESSAGE = "Car is not found by id: ";
-
     @Autowired
     public CarController(CarRepository repository) {
         this.repository = repository;
@@ -37,36 +34,64 @@ public class CarController implements
     @GetMapping
     @ResponseStatus(HttpStatus.FOUND)
     public CollectionModel<EntityModel<Car>> getAll() {
-        List<Car> cars = repository.findAll();
-
-        return toCollectionModel(cars);
+        return toCollectionModel(repository.findAll());
     }
 
     /*Single item*/
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.FOUND)
     public EntityModel<Car> getSingle(@PathVariable Integer id) {
-        Car car = repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(MESSAGE+id));
-
-        return toModel(car);
+        return toModel(repository.findById(id).orElseThrow());
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Car create(@RequestBody Car newCar) {
-        return repository.save(newCar);
+    public EntityModel<Car> create(@RequestBody CarDTO newCar) {
+        Car car = new Car();
+        car.setModel(newCar.getModel());
+        car.setPlateNumber(newCar.getPlateNumber());
+        car.setVin(newCar.getVin());
+        car.setColor(newCar.getColor());
+        return toModel(repository.save(car));
+    }
+
+    @PutMapping("/{id}")
+    @ResponseStatus(HttpStatus.CREATED)
+    public EntityModel<Car> update(@PathVariable Integer id,
+                                   @RequestBody CarDTO newCar) {
+        Car car = repository.findById(id).orElseThrow();
+        car.setModel(newCar.getModel());
+        car.setPlateNumber(newCar.getPlateNumber());
+        car.setVin(newCar.getVin());
+        car.setColor(newCar.getColor());
+        return toModel(repository.save(car));
+    }
+
+    @PatchMapping
+    @ResponseStatus(HttpStatus.OK)
+    public EntityModel<Car> assignDriver(Integer id,
+                                         Integer driverId) {
+        Car car = repository.findById(id).orElseThrow();
+        car.setDriverId(driverId);
+        return toModel(repository.save(car));
     }
 
     @PatchMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public Car flagAsUnavailable(@PathVariable Integer id) {
-        return repository.findById(id)
-                .map(car -> {
-                    car.setAvailable(false);
-                    return repository.save(car);
-                })
-                .orElseThrow( () -> new EntityNotFoundException(MESSAGE+id));
+    public EntityModel<Car> changeAvailableFlag(@PathVariable Integer id,
+                                               boolean bool) {
+        Car car = repository.findById(id).orElseThrow();
+        car.setAvailable(bool);
+        return toModel(repository.save(car));
+    }
+
+    @DeleteMapping
+    @ResponseStatus(HttpStatus.OK)
+    public EntityModel<Car> changeDeletedStatus(Integer id,
+                                               boolean bool) {
+        Car car = repository.findById(id).orElseThrow();
+        car.setDeleted(bool);
+        return toModel(repository.save(car));
     }
 
     @DeleteMapping("/{id}")

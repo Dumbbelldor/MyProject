@@ -2,18 +2,14 @@ package ru.mine.dto;
 
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 @Data
 public class DriverDTO {
 
     private Integer employeeId;
 
-    private Integer carId;
-
     private Long licenseId;
 
-    private Date licenseExpDate;
-
-    private boolean available;
+    private LocalDate licenseExpDate;
 }

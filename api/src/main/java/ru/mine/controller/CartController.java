@@ -6,7 +6,6 @@ import org.springframework.web.bind.annotation.*;
 import ru.mine.domain.Product;
 import ru.mine.repository.ProductRepository;
 
-import javax.persistence.EntityNotFoundException;
 import javax.servlet.http.HttpSession;
 import java.util.*;
 
@@ -36,7 +35,7 @@ public class CartController {
     @ResponseStatus(HttpStatus.OK)
     public String addItem(Integer id, Integer quantity) {
         if (id > 0 && quantity > 0) {
-            Product product = findById(id);
+            Product product = repository.findById(id).orElseThrow();
             cart.put(product, quantity);
             session.setAttribute("cart", cart);
             return product.getName()+" x"+quantity+" have been added to your cart";
@@ -47,7 +46,7 @@ public class CartController {
     @ResponseStatus(HttpStatus.OK)
     public String update(Integer id, Integer newQuantity) {
         Map<Product, Integer> cartMap = getCartMap();
-        Product product = findById(id);
+        Product product = repository.findById(id).orElseThrow();
 
         if (newQuantity > 0) {
             if (cartMap.containsKey(product)) {
@@ -62,16 +61,16 @@ public class CartController {
         }
 
         if (newQuantity == 0) {
-            delete(id);
+            deleteItem(id);
             return "Success";
         } else return "Quantity cannot be negative";
     }
 
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public String delete(@PathVariable Integer id) {
+    @ResponseStatus(HttpStatus.OK)
+    public String deleteItem(@PathVariable Integer id) {
         Map<Product, Integer> cartMap = getCartMap();
-        Product product = findById(id);
+        Product product = repository.findById(id).orElseThrow();
 
         if (cartMap.containsKey(product)) {
             cartMap.remove(product);
@@ -82,17 +81,19 @@ public class CartController {
         }
     }
 
+    @DeleteMapping
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public String clearCart() {
+        Map<Product, Integer> cartMap = getCartMap();
+        cartMap.clear();
+        session.setAttribute("cart", cartMap);
+        return "Your cart has been cleansed successfully";
+    }
+
     @SuppressWarnings("unchecked")
     private Map<Product, Integer> getCartMap() {
         if (session.getAttribute("cart") != null) {
             return (Map<Product, Integer>) session.getAttribute("cart");
         } else throw new NullPointerException("Cart is not yet filled with stuff");
-    }
-
-    private Product findById(Integer id) {
-        if (id > 0) {
-            return repository.findById(id)
-                    .orElseThrow(() -> new EntityNotFoundException("Product is not found by id: " + id));
-        } else throw new IllegalArgumentException("Id must be positive and non-null");
     }
 }

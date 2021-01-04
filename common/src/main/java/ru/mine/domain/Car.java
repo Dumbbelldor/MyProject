@@ -13,7 +13,7 @@ public class Car implements Serializable {
     static final long serialVersionUID = 123L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
 
     @Column
@@ -34,4 +34,7 @@ public class Car implements Serializable {
 
     @Column(name = "available")
     private boolean available;
+
+    @Column(name = "deleted")
+    private boolean deleted;
 }

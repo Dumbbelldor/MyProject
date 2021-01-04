@@ -14,7 +14,7 @@ public class User implements Serializable {
     static final long serialVersionUID = 123L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
 
     @Column
@@ -37,5 +37,5 @@ public class User implements Serializable {
 
     @Column
     @Enumerated(EnumType.STRING)
-    private SystemRoles role = SystemRoles.REGULAR_USER;
+    private SystemRoles role;
 }

@@ -8,13 +8,11 @@ import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Service
-public class DriverAssignation {
+public class DriverUtils {
 
     static DriverRepository repository;
 
-    private DriverAssignation() {
-        throw new IllegalArgumentException();
-    }
+    private DriverUtils() {}
 
     public static boolean isAnyoneReady() {
         return !repository.findByAvailableTrue().isEmpty();
