@@ -3,15 +3,18 @@ package ru.mine.domain;
 import lombok.Data;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.sql.Timestamp;
 
 @Data
 @Entity
-@Table(name = "m_users")
-public class User {
+@Table(name = "users")
+public class User implements Serializable {
+
+    static final long serialVersionUID = 123L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.TABLE)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
 
     @Column
@@ -20,8 +23,8 @@ public class User {
     @Column
     private String password;
 
-    @Column(name = "is_deleted")
-    private boolean isDeleted;
+    @Column(name = "deleted")
+    private boolean deleted;
 
     @Column
     private String email;
@@ -34,5 +37,5 @@ public class User {
 
     @Column
     @Enumerated(EnumType.STRING)
-    private SystemRoles role = SystemRoles.REGULAR_USER;
+    private SystemRoles role;
 }

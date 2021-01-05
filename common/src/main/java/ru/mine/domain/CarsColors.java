@@ -5,7 +5,7 @@ import lombok.ToString;
 
 @ToString
 @Getter
-enum CarsColors {
+public enum CarsColors {
 
     WHITE,
     BLACK,
@@ -13,5 +13,6 @@ enum CarsColors {
     RED,
     GREEN,
     YELLOW,
-    GREY
+    GREY,
+    PURPLE
 }

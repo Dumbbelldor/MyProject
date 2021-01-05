@@ -3,14 +3,17 @@ package ru.mine.domain;
 import lombok.Data;
 
 import javax.persistence.*;
+import java.io.Serializable;
 
 @Data
 @Entity
-@Table(name = "m_cars")
-public class Car {
+@Table(name = "cars")
+public class Car implements Serializable {
+
+    static final long serialVersionUID = 123L;
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
 
     @Column
@@ -29,6 +32,9 @@ public class Car {
     @Column(name = "driver_id")
     private Integer driverId;
 
-    @Column(name = "is_available")
-    private boolean isAvailable;
+    @Column(name = "available")
+    private boolean available;
+
+    @Column(name = "deleted")
+    private boolean deleted;
 }
