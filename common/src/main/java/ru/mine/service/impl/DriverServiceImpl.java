@@ -37,7 +37,7 @@ public class DriverServiceImpl implements DriverService {
     }
 
     @Override
-    public List<Driver> findByAvailableTrue() {
-        return repository.findByAvailableTrue();
+    public List<Driver> findByAvailableTrueAndCarIdNotNull() {
+        return repository.findByAvailableTrueAndCarIdNotNull();
     }
 }

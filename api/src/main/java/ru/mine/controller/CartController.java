@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.mine.domain.Product;
-import ru.mine.repository.ProductRepository;
+import ru.mine.service.impl.ProductServiceImpl;
 
 import javax.servlet.http.HttpSession;
 import java.util.*;
@@ -13,14 +13,14 @@ import java.util.*;
 @RequestMapping("/cart")
 public class CartController {
 
-    private final ProductRepository repository;
+    private final ProductServiceImpl repository;
 
     private final HttpSession session;
 
     private final Map<Product, Integer> cart = new LinkedHashMap<>();
 
     @Autowired
-    public CartController(ProductRepository repository, HttpSession session) {
+    public CartController(ProductServiceImpl repository, HttpSession session) {
         this.repository = repository;
         this.session = session;
     }
@@ -34,21 +34,27 @@ public class CartController {
     @GetMapping("/form")
     @ResponseStatus(HttpStatus.OK)
     public String addItem(Integer id, Integer quantity) {
-        if (id > 0 && quantity > 0) {
-            Product product = repository.findById(id).orElseThrow();
+        Product product = repository.findById(id);
+        if (quantity > 0 && quantity < product.getQuantity()) {
             cart.put(product, quantity);
             session.setAttribute("cart", cart);
             return product.getName()+" x"+quantity+" have been added to your cart";
-        } else return "Quantity/id must be positive and non-null";
+        } else return "Insufficient quantity of that product";
     }
 
     @PatchMapping("/update")
     @ResponseStatus(HttpStatus.OK)
     public String update(Integer id, Integer newQuantity) {
         Map<Product, Integer> cartMap = getCartMap();
-        Product product = repository.findById(id).orElseThrow();
+        Product product = repository.findById(id);
 
-        if (newQuantity > 0) {
+        if (newQuantity == 0) {
+            deleteItem(id);
+            return "All items "+product.getName()+" have been deleted";
+        }
+
+        if (newQuantity > 0 && newQuantity < product.getQuantity()) {
+
             if (cartMap.containsKey(product)) {
                 cartMap.replace(product, newQuantity);
                 session.setAttribute("cart", cartMap);
@@ -58,19 +64,14 @@ public class CartController {
                 session.setAttribute("cart", cartMap);
                 return product.getName()+" x"+newQuantity+" have been added to your cart";
             }
-        }
-
-        if (newQuantity == 0) {
-            deleteItem(id);
-            return "Success";
-        } else return "Quantity cannot be negative";
+        } else return "Operation declined: not enough items";
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public String deleteItem(@PathVariable Integer id) {
         Map<Product, Integer> cartMap = getCartMap();
-        Product product = repository.findById(id).orElseThrow();
+        Product product = repository.findById(id);
 
         if (cartMap.containsKey(product)) {
             cartMap.remove(product);

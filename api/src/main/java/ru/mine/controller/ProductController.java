@@ -51,6 +51,7 @@ public class ProductController implements
         Product product = new Product();
         product.setName(productDTO.getName());
         product.setPrice(productDTO.getPrice());
+        product.setQuantity(productDTO.getQuantity());
         product.setAvailable(true);
         return toModel(repository.save(product));
     }
@@ -63,6 +64,7 @@ public class ProductController implements
 
         if (productDTO.getName() != null) product.setName(productDTO.getName());
         if (productDTO.getPrice() != 0) product.setPrice(productDTO.getPrice());
+        product.setQuantity(productDTO.getQuantity());
         return toModel(repository.save(product));
     }
 

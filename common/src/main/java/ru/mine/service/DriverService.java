@@ -14,5 +14,5 @@ public interface DriverService {
 
     void deleteById(Integer id);
 
-    List<Driver> findByAvailableTrue();
+    List<Driver> findByAvailableTrueAndCarIdNotNull();
 }

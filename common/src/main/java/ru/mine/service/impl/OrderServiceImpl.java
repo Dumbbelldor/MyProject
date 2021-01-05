@@ -43,12 +43,12 @@ public class OrderServiceImpl implements OrderService {
     }
 
     public boolean isAnyoneReady() {
-        return !driverRep.findByAvailableTrue().isEmpty();
+        return !driverRep.findByAvailableTrueAndCarIdNotNull().isEmpty();
     }
 
     public Integer assignAndGetId(boolean bool) {
         if (bool) {
-            List<Driver> readyList = driverRep.findByAvailableTrue();
+            List<Driver> readyList = driverRep.findByAvailableTrueAndCarIdNotNull();
             Driver driver = readyList.get(
                     ThreadLocalRandom.current().nextInt(readyList.size()));
             driver.setAvailable(false);
