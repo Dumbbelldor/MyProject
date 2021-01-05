@@ -10,10 +10,8 @@ import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
 import ru.mine.domain.Product;
 import ru.mine.dto.ProductDTO;
-import ru.mine.repository.ProductRepository;
+import ru.mine.service.impl.ProductServiceImpl;
 
-import javax.persistence.EntityNotFoundException;
-import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -25,10 +23,10 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 public class ProductController implements
         RepresentationModelAssembler<Product, EntityModel<Product>> {
 
-    private final ProductRepository repository;
+    private final ProductServiceImpl repository;
 
     @Autowired
-    public ProductController(ProductRepository repository) {
+    public ProductController(ProductServiceImpl repository) {
         this.repository = repository;
     }
 
@@ -37,15 +35,13 @@ public class ProductController implements
     @GetMapping
     @ResponseStatus(HttpStatus.FOUND)
     public CollectionModel<EntityModel<Product>> getAll() {
-        List<Product> products = repository.findAll();
-        return toCollectionModel(products);
+        return toCollectionModel(repository.findAll());
     }
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.FOUND)
     public EntityModel<Product> getSingle(@PathVariable Integer id) {
-        Product product = validFindById(id);
-        return toModel(product);
+        return toModel(repository.findById(id));
     }
 
 
@@ -61,8 +57,9 @@ public class ProductController implements
 
     @PutMapping
     @ResponseStatus(HttpStatus.OK)
-    public EntityModel<Product> update(Integer id, ProductDTO productDTO) {
-        Product product = validFindById(id);
+    public EntityModel<Product> update(Integer id,
+                                       @RequestBody ProductDTO productDTO) {
+        Product product = repository.findById(id);
 
         if (productDTO.getName() != null) product.setName(productDTO.getName());
         if (productDTO.getPrice() != 0) product.setPrice(productDTO.getPrice());
@@ -72,7 +69,7 @@ public class ProductController implements
     @PatchMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public EntityModel<Product> changeAvailableFlag(@PathVariable Integer id, boolean bool) {
-        Product product = validFindById(id);
+        Product product = repository.findById(id);
         product.setAvailable(bool);
         return toModel(repository.save(product));
     }
@@ -81,15 +78,6 @@ public class ProductController implements
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteById(@PathVariable Integer id) {
         repository.deleteById(id);
-    }
-
-    /*Misc*/
-
-    private Product validFindById(Integer id) {
-        if (id > 0) {
-            return repository.findById(id)
-                    .orElseThrow(() -> new EntityNotFoundException("Product is not found by id: " + id));
-        } else throw new IllegalArgumentException("Id must be positive and non-null");
     }
 
     /*Model Builder Section*/

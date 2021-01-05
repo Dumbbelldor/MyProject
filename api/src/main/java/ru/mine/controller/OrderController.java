@@ -11,8 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.mine.domain.Product;
 import ru.mine.domain.Order;
 import ru.mine.domain.Status;
-import ru.mine.repository.OrderRepository;
-import ru.mine.utils.DriverUtils;
+import ru.mine.service.impl.OrderServiceImpl;
 
 import javax.servlet.http.HttpSession;
 import java.sql.Timestamp;
@@ -29,12 +28,12 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 public class OrderController implements
         RepresentationModelAssembler<Order, EntityModel<Order>> {
 
-    private final OrderRepository repository;
+    private final OrderServiceImpl repository;
 
     private final HttpSession session;
 
     @Autowired
-    public OrderController(OrderRepository repository, HttpSession session) {
+    public OrderController(OrderServiceImpl repository, HttpSession session) {
         this.repository = repository;
         this.session = session;
     }
@@ -50,13 +49,13 @@ public class OrderController implements
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.FOUND)
     public EntityModel<Order> getSingle(@PathVariable Integer id) {
-        return toModel(repository.findById(id).orElseThrow());
+        return toModel(repository.findById(id));
     }
 
     @PatchMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public EntityModel<Order> changeStatus(@PathVariable Integer id, Status status) {
-        Order order = repository.findById(id).orElseThrow();
+        Order order = repository.findById(id);
         order.setStatus(status);
         return toModel(repository.save(order));
     }
@@ -65,7 +64,7 @@ public class OrderController implements
     @ResponseStatus(HttpStatus.OK)
     public EntityModel<Order> assignDriver(Integer orderId,
                                            Integer driverId) {
-        Order order = repository.findById(orderId).orElseThrow();
+        Order order = repository.findById(orderId);
         order.setCourierId(driverId);
         return toModel(repository.save(order));
     }
@@ -106,11 +105,11 @@ public class OrderController implements
         puts them into a list, randomly chooses one of them in [1, size) range,
         assign him to the order, then flags him as busy (unavailable)*/
         Integer driverId;
-        if (DriverUtils.isAnyoneReady()) {
-            driverId = DriverUtils.assignAndGetId(true);
+        if (repository.isAnyoneReady()) {
+            driverId = repository.assignAndGetId(true);
             order.setStatus(Status.IN_PROGRESS);
         } else {
-            driverId = DriverUtils.assignAndGetId(false);
+            driverId = repository.assignAndGetId(false);
             order.setStatus(Status.AWAITS);
         }
 

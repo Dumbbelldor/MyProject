@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.mine.domain.Employee;
 import ru.mine.domain.SystemRoles;
 import ru.mine.dto.EmployeeDTO;
-import ru.mine.repository.EmployeeRepository;
+import ru.mine.service.impl.EmployeeServiceImpl;
 
 import java.time.LocalDate;
 import java.util.stream.Collectors;
@@ -25,10 +25,10 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 public class EmployeeController implements
         RepresentationModelAssembler<Employee, EntityModel<Employee>> {
 
-    private final EmployeeRepository repository;
+    private final EmployeeServiceImpl repository;
 
     @Autowired
-    public EmployeeController(EmployeeRepository repository) {
+    public EmployeeController(EmployeeServiceImpl repository) {
         this.repository = repository;
     }
 
@@ -43,7 +43,7 @@ public class EmployeeController implements
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.FOUND)
     public EntityModel<Employee> getSingle(@PathVariable Integer id) {
-        return toModel(repository.findById(id).orElseThrow());
+        return toModel(repository.findById(id));
     }
 
     @PostMapping
@@ -66,7 +66,7 @@ public class EmployeeController implements
     @ResponseStatus(HttpStatus.OK)
     public EntityModel<Employee> update(@PathVariable Integer id,
                                         @RequestBody EmployeeDTO newEmployee) {
-        Employee employee = repository.findById(id).orElseThrow();
+        Employee employee = repository.findById(id);
         employee.setFullName(newEmployee.getFullName());
         employee.setBirthDate(newEmployee.getBirthDate());
         employee.setRegistration(newEmployee.getRegistration());
@@ -79,7 +79,7 @@ public class EmployeeController implements
     @ResponseStatus(HttpStatus.OK)
     public EntityModel<Employee> extendContract(Integer employeeId,
                                                 int years) {
-        Employee employee = repository.findById(employeeId).orElseThrow();
+        Employee employee = repository.findById(employeeId);
         employee.setContractExpiration(employee.getContractExpiration().plusYears(years));
         return toModel(repository.save(employee));
     }
@@ -88,7 +88,7 @@ public class EmployeeController implements
     @ResponseStatus(HttpStatus.OK)
     public EntityModel<Employee> changeFiredFlag(@PathVariable Integer id,
                                              boolean bool) {
-        Employee employee = repository.findById(id).orElseThrow();
+        Employee employee = repository.findById(id);
         employee.setFired(bool);
         return toModel(repository.save(employee));
     }
@@ -97,7 +97,7 @@ public class EmployeeController implements
     @ResponseStatus(HttpStatus.OK)
     public EntityModel<Employee> changePosition(Integer id,
                                                 SystemRoles role) {
-        Employee employee = repository.findById(id).orElseThrow();
+        Employee employee = repository.findById(id);
         employee.setPosition(role);
         return toModel(repository.save(employee));
     }

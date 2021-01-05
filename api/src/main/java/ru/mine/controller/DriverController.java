@@ -10,7 +10,7 @@ import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
 import ru.mine.domain.Driver;
 import ru.mine.dto.DriverDTO;
-import ru.mine.repository.DriverRepository;
+import ru.mine.service.impl.DriverServiceImpl;
 
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -23,10 +23,10 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 public class DriverController implements
         RepresentationModelAssembler<Driver, EntityModel<Driver>> {
 
-    private final DriverRepository repository;
+    private final DriverServiceImpl repository;
 
     @Autowired
-    public DriverController(DriverRepository repository) {
+    public DriverController(DriverServiceImpl repository) {
         this.repository = repository;
     }
 
@@ -41,7 +41,7 @@ public class DriverController implements
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.FOUND)
     public EntityModel<Driver> getSingle(@PathVariable Integer id) {
-        return toModel(repository.findById(id).orElseThrow());
+        return toModel(repository.findById(id));
     }
 
     @PostMapping
@@ -58,7 +58,7 @@ public class DriverController implements
     @ResponseStatus(HttpStatus.OK)
     public EntityModel<Driver> update(@PathVariable Integer id,
                                       @RequestBody DriverDTO newDriver) {
-        Driver driver = repository.findById(id).orElseThrow();
+        Driver driver = repository.findById(id);
         driver.setEmployeeId(newDriver.getEmployeeId());
         driver.setLicenseId(newDriver.getLicenseId());
         driver.setLicenseExpDate(newDriver.getLicenseExpDate());
@@ -69,7 +69,7 @@ public class DriverController implements
     @ResponseStatus(HttpStatus.OK)
     public EntityModel<Driver> changeAvailableFlag(@PathVariable Integer id,
                                                   boolean bool) {
-        Driver driver = repository.findById(id).orElseThrow();
+        Driver driver = repository.findById(id);
         driver.setAvailable(bool);
         return toModel(repository.save(driver));
     }
@@ -78,7 +78,7 @@ public class DriverController implements
     @ResponseStatus(HttpStatus.OK)
     public EntityModel<Driver> assignCar(Integer driverId,
                                          Integer carId) {
-        Driver driver = repository.findById(driverId).orElseThrow();
+        Driver driver = repository.findById(driverId);
         driver.setCarId(carId);
         return toModel(repository.save(driver));
     }

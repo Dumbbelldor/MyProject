@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.mine.domain.SystemRoles;
 import ru.mine.domain.User;
 import ru.mine.dto.UserDTO;
-import ru.mine.repository.UserRepository;
+import ru.mine.service.impl.UserServiceImpl;
 
 import java.sql.Timestamp;
 import java.util.stream.Collectors;
@@ -25,10 +25,10 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 public class UserController implements
         RepresentationModelAssembler<User, EntityModel<User>> {
 
-    private final UserRepository repository;
+    private final UserServiceImpl repository;
     
     @Autowired
-    public UserController(UserRepository repository) {
+    public UserController(UserServiceImpl repository) {
         this.repository = repository;
     }
 
@@ -43,7 +43,7 @@ public class UserController implements
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.FOUND)
     public EntityModel<User> getSingle(@PathVariable Integer id) {
-        return toModel(repository.findById(id).orElseThrow());
+        return toModel(repository.findById(id));
     }
 
     @PostMapping
@@ -63,7 +63,7 @@ public class UserController implements
     @ResponseStatus(HttpStatus.CREATED)
     public EntityModel<User> update(@PathVariable Integer id,
                                     @RequestBody UserDTO userDTO) {
-        User user = repository.findById(id).orElseThrow();
+        User user = repository.findById(id);
         user.setLogin(userDTO.getLogin());
         user.setPassword(userDTO.getPassword());
         user.setEmail(userDTO.getEmail());
@@ -75,7 +75,7 @@ public class UserController implements
     @ResponseStatus(HttpStatus.OK)
     public EntityModel<User> changeRole(Integer id,
                                         SystemRoles role) {
-        User user = repository.findById(id).orElseThrow();
+        User user = repository.findById(id);
         user.setRole(role);
         return toModel(user);
     }
@@ -84,7 +84,7 @@ public class UserController implements
     @ResponseStatus(HttpStatus.OK)
     public EntityModel<User> changeDeletedFlag(@PathVariable Integer id,
                                                boolean bool) {
-        User user = repository.findById(id).orElseThrow();
+        User user = repository.findById(id);
         user.setDeleted(bool);
         user.setChanged(new Timestamp(System.currentTimeMillis()));
         return toModel(repository.save(user));

@@ -1,6 +1,7 @@
 package ru.mine.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.server.RepresentationModelAssembler;
@@ -10,7 +11,7 @@ import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
 import ru.mine.domain.Car;
 import ru.mine.dto.CarDTO;
-import ru.mine.repository.CarRepository;
+import ru.mine.service.impl.CarServiceImpl;
 
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -23,10 +24,10 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 public class CarController implements
         RepresentationModelAssembler<Car, EntityModel<Car>> {
 
-    private final CarRepository repository;
+    private final CarServiceImpl repository;
 
     @Autowired
-    public CarController(CarRepository repository) {
+    public CarController(CarServiceImpl repository) {
         this.repository = repository;
     }
 
@@ -40,8 +41,9 @@ public class CarController implements
     /*Single item*/
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.FOUND)
+    @Cacheable("cars")
     public EntityModel<Car> getSingle(@PathVariable Integer id) {
-        return toModel(repository.findById(id).orElseThrow());
+        return toModel(repository.findById(id));
     }
 
     @PostMapping
@@ -59,7 +61,7 @@ public class CarController implements
     @ResponseStatus(HttpStatus.CREATED)
     public EntityModel<Car> update(@PathVariable Integer id,
                                    @RequestBody CarDTO newCar) {
-        Car car = repository.findById(id).orElseThrow();
+        Car car = repository.findById(id);
         car.setModel(newCar.getModel());
         car.setPlateNumber(newCar.getPlateNumber());
         car.setVin(newCar.getVin());
@@ -71,7 +73,7 @@ public class CarController implements
     @ResponseStatus(HttpStatus.OK)
     public EntityModel<Car> assignDriver(Integer id,
                                          Integer driverId) {
-        Car car = repository.findById(id).orElseThrow();
+        Car car = repository.findById(id);
         car.setDriverId(driverId);
         return toModel(repository.save(car));
     }
@@ -80,7 +82,7 @@ public class CarController implements
     @ResponseStatus(HttpStatus.OK)
     public EntityModel<Car> changeAvailableFlag(@PathVariable Integer id,
                                                boolean bool) {
-        Car car = repository.findById(id).orElseThrow();
+        Car car = repository.findById(id);
         car.setAvailable(bool);
         return toModel(repository.save(car));
     }
@@ -89,7 +91,7 @@ public class CarController implements
     @ResponseStatus(HttpStatus.OK)
     public EntityModel<Car> changeDeletedStatus(Integer id,
                                                boolean bool) {
-        Car car = repository.findById(id).orElseThrow();
+        Car car = repository.findById(id);
         car.setDeleted(bool);
         return toModel(repository.save(car));
     }
