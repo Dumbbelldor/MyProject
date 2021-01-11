@@ -11,7 +11,7 @@ import java.sql.Timestamp;
 @Table(name = "users")
 public class User implements Serializable {
 
-    static final long serialVersionUID = 123L;
+    private static final long serialVersionUID = 123L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

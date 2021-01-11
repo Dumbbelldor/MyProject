@@ -13,7 +13,7 @@ public class EmployeeDTO {
 
     private String registration;
 
-    private int phoneNumber;
+    private String phoneNumber;
 
     private int payroll;
 }

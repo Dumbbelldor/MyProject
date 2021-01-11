@@ -10,7 +10,7 @@ import java.io.Serializable;
 @Table(name = "cars")
 public class Car implements Serializable {
 
-    static final long serialVersionUID = 123L;
+    private static final long serialVersionUID = 123L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

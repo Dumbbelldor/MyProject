@@ -11,7 +11,7 @@ import java.time.LocalDate;
 @Table(name = "employees")
 public class Employee implements Serializable {
 
-    static final long serialVersionUID = 123L;
+    private static final long serialVersionUID = 123L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -43,5 +43,5 @@ public class Employee implements Serializable {
     private boolean fired;
 
     @Column(name = "phone_number")
-    private int phoneNumber;
+    private String phoneNumber;
 }

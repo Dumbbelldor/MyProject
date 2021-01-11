@@ -73,9 +73,13 @@ public class CarController implements
     @ResponseStatus(HttpStatus.OK)
     public EntityModel<Car> assignDriver(Integer id,
                                          Integer driverId) {
-        Car car = repository.findById(id);
-        car.setDriverId(driverId);
-        return toModel(repository.save(car));
+        if (repository.isDriverAllowed(driverId)) {
+            Car car = repository.findById(id);
+            car.setDriverId(driverId);
+            return toModel(repository.save(car));
+        } else {
+            throw new IllegalArgumentException("Driver must have proper papers");
+        }
     }
 
     @PatchMapping("/{id}")

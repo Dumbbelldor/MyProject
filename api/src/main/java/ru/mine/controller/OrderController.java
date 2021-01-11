@@ -101,6 +101,12 @@ public class OrderController implements
             }
         } else throw new ArithmeticException("That shouldn't have happened");
 
+        /*Total price above 1500 makes delivery free*/
+        int standardFee = 100;
+        if (repository.isDeliveryFree(totalPrice)) {
+            order.setDeliveryCost(0);
+        } else order.setDeliveryCost(standardFee);
+
         /*This section searches for available driver in database,
         puts them into a list, randomly chooses one of them in [1, size) range,
         assign him to the order, then flags him as busy (unavailable)*/

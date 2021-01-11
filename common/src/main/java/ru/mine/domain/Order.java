@@ -11,7 +11,7 @@ import java.sql.Timestamp;
 @Table(name = "order_info")
 public class Order implements Serializable {
 
-    static final long serialVersionUID = 123L;
+    private static final long serialVersionUID = 123L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -38,4 +38,7 @@ public class Order implements Serializable {
 
     @Column(name = "total_price")
     private int totalPrice;
+
+    @Column(name = "delivery_cost")
+    private int deliveryCost;
 }
